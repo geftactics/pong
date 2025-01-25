@@ -2,11 +2,6 @@ import pygame
 import time
 import RPi.GPIO as GPIO
 
-# Main config
-WIN_SCORE = 50
-BALL_SPEED = 3.5
-
-
 # Initialize pygame
 pygame.init()
 
@@ -26,13 +21,12 @@ PADDLE_HEIGHT = 100
 PADDLE_SPEED = 10
 
 # GPIO Pins for Hall Sensors
-P1_SENSOR_A = 19
-P1_SENSOR_B = 26
-P2_SENSOR_A = 16
-P2_SENSOR_B = 20
+P1_SENSOR_A = 20
+P1_SENSOR_B = 16
+P2_SENSOR_A = 19
+P2_SENSOR_B = 26
 
 # Initialize GPIO
-BOUNCE = 25
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(P1_SENSOR_A, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(P1_SENSOR_B, GPIO.IN, pull_up_down=GPIO.PUD_UP)
@@ -41,8 +35,8 @@ GPIO.setup(P2_SENSOR_B, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 # Ball settings
 BALL_SIZE = 20
-BALL_SPEED_X = BALL_SPEED
-BALL_SPEED_Y = BALL_SPEED
+BALL_SPEED_X = 6
+BALL_SPEED_Y = 6
 
 # Game states
 READY = 0
@@ -126,8 +120,7 @@ def handle_sensor_trigger(player, sensor):
     current_time = time.time()
     state = player_state[player]
 
-    if state["trigger_time"] and current_time - state["trigger_time"] > 0.10:
-        print(f"{player} IDLE RESET")
+    if state["trigger_time"] and current_time - state["trigger_time"] > 2:
         state["last_trigger"] = None
         state["trigger_count"] = 0
 
@@ -141,24 +134,16 @@ def handle_sensor_trigger(player, sensor):
 
     # Determine direction based on last trigger
     if sensor == "A" and state["last_trigger"] == "B":
-        print(f"{player} FWD motion (A -> B).")
+        print(f"{player} FWD motion (A -> B)")
         if player == "P1":
             p1_up()
-            p1_up()
-            p1_up()
         elif player == "P2":
-            p2_up()
-            p2_up()
             p2_up()
     elif sensor == "B" and state["last_trigger"] == "A":
-        print(f"{player} REV motion (B -> A).")
+        print(f"{player} REV motion (B -> A)")
         if player == "P1":
             p1_down()
-            p1_down()
-            p1_down()
         elif player == "P2":
-            p2_down()
-            p2_down()
             p2_down()
 
     # Update state
@@ -186,10 +171,10 @@ def p2_sensor_b_callback(channel):
     handle_sensor_trigger("P2", "B")
 
 # Setup GPIO event detection
-GPIO.add_event_detect(P1_SENSOR_A, GPIO.FALLING, callback=p1_sensor_a_callback, bouncetime=BOUNCE)
-GPIO.add_event_detect(P1_SENSOR_B, GPIO.FALLING, callback=p1_sensor_b_callback, bouncetime=BOUNCE)
-GPIO.add_event_detect(P2_SENSOR_A, GPIO.FALLING, callback=p2_sensor_a_callback, bouncetime=BOUNCE)
-GPIO.add_event_detect(P2_SENSOR_B, GPIO.FALLING, callback=p2_sensor_b_callback, bouncetime=BOUNCE)
+GPIO.add_event_detect(P1_SENSOR_A, GPIO.FALLING, callback=p1_sensor_a_callback, bouncetime=200)
+GPIO.add_event_detect(P1_SENSOR_B, GPIO.FALLING, callback=p1_sensor_b_callback, bouncetime=200)
+GPIO.add_event_detect(P2_SENSOR_A, GPIO.FALLING, callback=p2_sensor_a_callback, bouncetime=200)
+GPIO.add_event_detect(P2_SENSOR_B, GPIO.FALLING, callback=p2_sensor_b_callback, bouncetime=200)
 
 
 def game_loop():
@@ -215,9 +200,9 @@ def game_loop():
         if keys[pygame.K_DOWN]:
             p2_down()
         # Ready buttons
-        if keys[pygame.K_1]:
+        if keys[pygame.K_a]:
             p1_ready()
-        if keys[pygame.K_2]:
+        if keys[pygame.K_l]:
             p2_ready()
 
         if game_state == READY:
@@ -265,11 +250,11 @@ def game_loop():
             display_text(f"{p1_score} - {p2_score}", 48, WHITE, (SCREEN_WIDTH // 2, 50))
 
             # Check for win
-            if p1_score >= WIN_SCORE:
+            if p1_score >= 5:
                 winner = "Player 1"
                 game_state = GAME_OVER
                 end_time = time.time()
-            elif p2_score >= WIN_SCORE:
+            elif p2_score >= 5:
                 winner = "Player 2"
                 game_state = GAME_OVER
                 end_time = time.time()
