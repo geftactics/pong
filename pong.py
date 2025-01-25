@@ -4,7 +4,7 @@ import RPi.GPIO as GPIO
 
 # Main config
 WIN_SCORE = 5
-BALL_SPEED = 3.5
+BALL_SPEED = 3.5 # Initial value - override with keys 3/4/5/6
 
 
 # Initialize pygame
@@ -54,8 +54,10 @@ PLAYING = 1
 GAME_OVER = 2
 
 # Initialize screen
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-pygame.display.set_caption("Pong Game")
+# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN | pygame.SCALED)
+pygame.display.set_caption("BikePong")
+pygame.mouse.set_visible(False)
 
 # Clock for controlling frame rate
 clock = pygame.time.Clock()
@@ -122,7 +124,7 @@ def countdown():
         screen.fill(BLACK)
         display_text("Player 1", 48, GREEN if p1_ready_flag else RED, (200, SCREEN_HEIGHT // 2))
         display_text("Player 2", 48, GREEN if p2_ready_flag else RED, (SCREEN_WIDTH - 200, SCREEN_HEIGHT // 2))
-        display_text(str(i), 72, WHITE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
+        display_text(str(i), 256, WHITE, (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 100))
         pygame.display.flip()
         time.sleep(1)
 
@@ -199,7 +201,7 @@ GPIO.add_event_detect(P2_START, GPIO.FALLING, callback=p2_ready, bouncetime=300)
 
 
 def game_loop():
-    global ball_pos, ball_dir, p1_score, p2_score, p1_ready_flag, p2_ready_flag, game_state, winner, p1_pos, p2_pos
+    global ball_pos, ball_dir, p1_score, p2_score, p1_ready_flag, p2_ready_flag, game_state, winner, p1_pos, p2_pos, BALL_SPEED_X, BALL_SPEED_Y
     running = True
 
     while running:
@@ -208,6 +210,41 @@ def game_loop():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_3:
+                    BALL_SPEED_X = 2.0
+                    BALL_SPEED_Y = 2.0
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_4:
+                    BALL_SPEED_X = 3.5
+                    BALL_SPEED_Y = 3.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_5:
+                    BALL_SPEED_X = 4.5
+                    BALL_SPEED_Y = 4.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_6:
+                    BALL_SPEED_X = 5.5
+                    BALL_SPEED_Y = 5.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_7:
+                    BALL_SPEED_X = 6.5
+                    BALL_SPEED_Y = 6.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_8:
+                    BALL_SPEED_X = 7.5
+                    BALL_SPEED_Y = 7.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                elif event.key == pygame.K_9:
+                    BALL_SPEED_X = 8.5
+                    BALL_SPEED_Y = 8.5
+                    ball_dir = [BALL_SPEED_X, BALL_SPEED_Y]
+                
+                # Update ball_dir when BALL_SPEED changes
+                ball_dir = [BALL_SPEED if ball_dir[0] > 0 else -BALL_SPEED, 
+                BALL_SPEED if ball_dir[1] > 0 else -BALL_SPEED]
 
         keys = pygame.key.get_pressed()
         # Player 1 controls (W/S)
@@ -296,6 +333,7 @@ def game_loop():
         pygame.display.flip()
         clock.tick(60)
 
+    pygame.mouse.set_visible(True)
     pygame.quit()
 
 if __name__ == "__main__":
