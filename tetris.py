@@ -34,6 +34,7 @@ COLORS = [
 ]
 
 # Fonts (blocky, LED-friendly)
+font_huge = pygame.font.SysFont('', 200, bold=False)
 font_large = pygame.font.SysFont('', 96, bold=False)
 font_small = pygame.font.SysFont('', 72, bold=False)
 
@@ -89,9 +90,12 @@ def check_input():
                 sys.exit()
             return event.key
     if controller_connected:
-        input_data = tuple(controller.read(64))
-        if input_data and input_data in key_map:
-            return key_map[input_data]
+        while True:
+            input_data = tuple(controller.read(64))
+            if not input_data:
+                break
+            if input_data in key_map:
+                return key_map[input_data]
     return None
 
 def rotate_tetrimino(tetrimino):
@@ -156,7 +160,7 @@ def game_over_screen(final_score):
         for x, cell in enumerate(row):
             if cell:
                 pygame.draw.rect(screen, DIM_BLOCK_COLOR, (offset_x + x * BLOCK_SIZE, offset_y + y * BLOCK_SIZE, BLOCK_SIZE, BLOCK_SIZE))
-    draw_text(f"Score: {final_score}", font_large, WHITE, screen, screen.get_width() // 2, screen.get_height() // 2)
+    draw_text(f"{final_score}", font_large, WHITE, screen, screen.get_width() // 2, screen.get_height() // 2)
     pygame.display.update()
     pygame.time.wait(5000)
 

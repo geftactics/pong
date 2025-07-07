@@ -20,8 +20,8 @@ RED = (255, 0, 0)
 GRAY = (120, 120, 120)
 
 # Font
-font_large = pygame.font.SysFont('Courier New', 96, bold=True)
-font_huge = pygame.font.SysFont('Courier New', 128, bold=True)
+font_large = pygame.font.SysFont('Courier New', 48, bold=True)
+font_huge = pygame.font.SysFont('Courier New', 96, bold=True)
 
 # Game area
 CELL_SIZE = 60  # Bigger cells to take more space
@@ -64,9 +64,12 @@ def check_input():
                 sys.exit()
             return event.key
     if controller_connected:
-        input_data = tuple(controller.read(64))
-        if input_data and input_data in key_map:
-            return key_map[input_data]
+        while True:
+            input_data = tuple(controller.read(64))
+            if not input_data:
+                break
+            if input_data in key_map:
+                return key_map[input_data]
     return None
 
 def ready_screen():
@@ -97,7 +100,7 @@ def snake_game():
     food = random_food(snake)
     clock = pygame.time.Clock()
     score = 0
-    move_delay = 200
+    move_delay = 150
     last_move = pygame.time.get_ticks()
 
     while True:
