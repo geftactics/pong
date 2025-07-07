@@ -69,6 +69,8 @@ def draw_text(text, font, color, surface, x, y):
     text_rect = text_obj.get_rect(center=(x, y))
     surface.blit(text_obj, text_rect)
 
+last_input_time = {}
+
 def check_input():
     key_map = {
         (1, 128, 128, 127, 127, 47,  0, 0): K_a,
@@ -95,11 +97,17 @@ def check_input():
         pygame.event.clear()
 
     if controller_connected:
+        current_time = pygame.time.get_ticks()
+        debounce_delay = 150  # ms
         while True:
             input_data = tuple(controller.read(64))
             if not input_data:
                 break
             if input_data in key_map:
+                key = key_map[input_data]
+                if key not in last_input_time or current_time - last_input_time[key] > debounce_delay:
+                    last_input_time[key] = current_time
+                    return key
                 return key_map[input_data]
     return None
 
@@ -217,16 +225,18 @@ def tetris_game():
         pass
 
         if input_key == K_UP:
-            rotated_shape = rotate_tetrimino(tetrimino)
-            if not is_collision(tetrimino, 0, 0, rotated_shape):
-                if current_time - last_move_time["up"] > move_delay:
+            if current_time - last_move_time["up"] > 200:  # Only debounce rotation
+                rotated_shape = rotate_tetrimino(tetrimino)
+                if not is_collision(tetrimino, 0, 0, rotated_shape):
                     tetrimino['shape'] = rotated_shape
                     last_move_time["up"] = current_time
 
         # Use DOWN for hard drop (traditional Tetris control)
         if input_key == K_DOWN:
-            while not is_collision(tetrimino, 0, 1):
-                tetrimino['y'] += 1
+            if current_time - last_move_time["down"] > 500:  # Debounce hard drop
+                while not is_collision(tetrimino, 0, 1):
+                    tetrimino['y'] += 1
+                last_move_time["down"] = current_time
 
         if current_time - last_drop > drop_time:
             if not is_collision(tetrimino, 0, 1):
