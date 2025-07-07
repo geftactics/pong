@@ -80,15 +80,20 @@ def check_input():
         (1, 128, 128, 127, 127, 15, 32, 0): K_SPACE,
         (1, 128, 128, 127, 127, 15, 16, 0): K_RETURN
     }
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
+    try:
+        for event in pygame.event.get():
+            if event.type == QUIT:
                 pygame.quit()
                 sys.exit()
-            return event.key
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                return event.key
+    except Exception as e:
+        print("Event error:", e)
+        pygame.event.clear()
+
     if controller_connected:
         while True:
             input_data = tuple(controller.read(64))
@@ -168,7 +173,10 @@ def ready_screen():
     screen.fill(BLACK)
     draw_text("Ready?", font_large, WHITE, screen, screen.get_width() // 2, screen.get_height() // 2)
     pygame.display.update()
-    while not check_input():
+    while True:
+        input_key = check_input()
+        if input_key == K_SPACE:
+            break
         pygame.time.wait(100)
 
 def tetris_game():
@@ -205,9 +213,8 @@ def tetris_game():
                 tetrimino['x'] += 1
                 last_move_time["right"] = current_time
 
-        if input_key == K_DOWN and not is_collision(tetrimino, 0, 1):
-            if current_time - last_move_time["down"] > move_delay:
-                tetrimino['y'] += 1
+        # Removed soft drop from DOWN key since it now does hard drop
+        pass
 
         if input_key == K_UP:
             rotated_shape = rotate_tetrimino(tetrimino)
@@ -216,7 +223,8 @@ def tetris_game():
                     tetrimino['shape'] = rotated_shape
                     last_move_time["up"] = current_time
 
-        if input_key == K_SPACE:
+        # Use DOWN for hard drop (traditional Tetris control)
+        if input_key == K_DOWN:
             while not is_collision(tetrimino, 0, 1):
                 tetrimino['y'] += 1
 
