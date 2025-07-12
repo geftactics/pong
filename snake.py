@@ -50,6 +50,8 @@ def draw_text(text, font, color, surface, x, y):
     surface.blit(text_obj, text_rect)
 
 def check_input():
+    global controller_connected
+
     joy_map = {
         (0x7F, 0x00): K_UP,
         (0x7F, 0xFF): K_DOWN,
@@ -59,26 +61,35 @@ def check_input():
     idle = [0x7F, 0x7F, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00]
     start_btn = 0x04
 
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.mouse.set_visible(True)
-            pygame.quit()
-            sys.exit()
-        if event.type == KEYDOWN:
-            if event.key == K_ESCAPE:
+    try:
+        for event in pygame.event.get():
+            if event.type == QUIT:
                 pygame.mouse.set_visible(True)
                 pygame.quit()
                 sys.exit()
-            return event.key
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.mouse.set_visible(True)
+                    pygame.quit()
+                    sys.exit()
+                return event.key
+    except Exception as e:
+        print("Pygame event error:", e)
+        # skip bad events
 
     if controller_connected:
-        data = controller.read(64)
-        if data and data[:8] != idle:
-            xy = tuple(data[:2])
-            if xy in joy_map:
-                return joy_map[xy]
-            if data[6] == start_btn:
-                return K_SPACE
+        try:
+            data = controller.read(64)
+            if data and data[:8] != idle:
+                xy = tuple(data[:2])
+                if xy in joy_map:
+                    return joy_map[xy]
+                if data[6] == start_btn:
+                    return K_SPACE
+        except OSError:
+            print("Controller read error, disabling controller input.")
+            controller_connected = False
+
     return None
 
 
