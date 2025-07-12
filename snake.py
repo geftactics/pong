@@ -4,6 +4,8 @@ import random
 import hid  # hidapi
 from pygame.locals import *
 
+move_delay = 250
+
 # Configuration
 USE_CONTROLLER = True
 
@@ -11,6 +13,7 @@ USE_CONTROLLER = True
 pygame.init()
 screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
 pygame.display.set_caption("Snake")
+pygame.mouse.set_visible(False)
 
 # Colors
 BLACK = (25, 0, 50)
@@ -32,7 +35,7 @@ GRID_HEIGHT = 600 // CELL_SIZE
 if USE_CONTROLLER:
     try:
         controller = hid.device()
-        controller.open(0x0810, 0xe501)
+        controller.open(0x1c59, 0x0026) 
         controller.set_nonblocking(True)
         controller_connected = True
     except Exception as e:
@@ -47,30 +50,37 @@ def draw_text(text, font, color, surface, x, y):
     surface.blit(text_obj, text_rect)
 
 def check_input():
-    key_map = {
-        (1, 128, 128, 127,   0, 15,  0, 0): K_UP,
-        (1, 128, 128, 127, 255, 15,  0, 0): K_DOWN,
-        (1, 128, 128,   0, 127, 15,  0, 0): K_LEFT,
-        (1, 128, 128, 255, 127, 15,  0, 0): K_RIGHT,
-        (1, 128, 128, 127, 127, 15, 32, 0): K_SPACE
+    joy_map = {
+        (0x7F, 0x00): K_UP,
+        (0x7F, 0xFF): K_DOWN,
+        (0x00, 0x7F): K_LEFT,
+        (0xFF, 0x7F): K_RIGHT,
     }
+    idle = [0x7F, 0x7F, 0x80, 0x80, 0x80, 0x80, 0x00, 0x00]
+    start_btn = 0x04
+
     for event in pygame.event.get():
         if event.type == QUIT:
+            pygame.mouse.set_visible(True)
             pygame.quit()
             sys.exit()
         if event.type == KEYDOWN:
             if event.key == K_ESCAPE:
+                pygame.mouse.set_visible(True)
                 pygame.quit()
                 sys.exit()
             return event.key
+
     if controller_connected:
-        while True:
-            input_data = tuple(controller.read(64))
-            if not input_data:
-                break
-            if input_data in key_map:
-                return key_map[input_data]
+        data = controller.read(64)
+        if data and data[:8] != idle:
+            xy = tuple(data[:2])
+            if xy in joy_map:
+                return joy_map[xy]
+            if data[6] == start_btn:
+                return K_SPACE
     return None
+
 
 def ready_screen():
     screen.fill(BLACK)
@@ -100,7 +110,7 @@ def snake_game():
     food = random_food(snake)
     clock = pygame.time.Clock()
     score = 0
-    move_delay = 150
+    
     last_move = pygame.time.get_ticks()
 
     while True:
@@ -139,6 +149,7 @@ def snake_game():
 
         for event in pygame.event.get():
             if event.type == QUIT:
+                pygame.mouse.set_visible(True)
                 pygame.quit()
                 sys.exit()
 

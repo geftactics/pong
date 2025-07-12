@@ -15,6 +15,7 @@ WIDTH, HEIGHT = 300, 600
 BLOCK_SIZE = 30
 screen = pygame.display.set_mode((800, 600), pygame.FULLSCREEN)
 pygame.display.set_caption("Tetris")
+pygame.mouse.set_visible(False)
 
 # Offset to center playfield
 offset_x = (screen.get_width() - WIDTH) // 2
@@ -85,10 +86,12 @@ def check_input():
     try:
         for event in pygame.event.get():
             if event.type == QUIT:
+                pygame.mouse.set_visible(True)
                 pygame.quit()
                 sys.exit()
             if event.type == KEYDOWN:
                 if event.key == K_ESCAPE:
+                    pygame.mouse.set_visible(True)
                     pygame.quit()
                     sys.exit()
                 return event.key
@@ -257,6 +260,7 @@ def tetris_game():
 
         for event in pygame.event.get():
             if event.type == QUIT:
+                pygame.mouse.set_visible(True)
                 pygame.quit()
                 sys.exit()
 
